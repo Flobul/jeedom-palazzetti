@@ -1,0 +1,56 @@
+{
+  "plugin": {
+    "repository": "jeedom-palazzetti",
+    "id": "Palazzetti",
+    "branches": [
+      "Beta"
+    ]
+  },
+  "php": {
+    "versions": [
+      "7.4",
+      "8.2"
+    ],
+    "jeedom_core_ref": "90a95f1dcef74a65d77374a1fed427541032fe82",
+    "phpstan_level": 1,
+    "phpstan_blocking": false
+  },
+  "i18n": {
+    "source": "fr_FR",
+    "languages": [
+      "de_DE",
+      "en_US",
+      "es_ES",
+      "fr_FR",
+      "it_IT",
+      "pt_PT"
+    ],
+    "automatic_languages": [
+      "de_DE",
+      "en_US",
+      "es_ES",
+      "fr_FR",
+      "it_IT",
+      "pt_PT"
+    ],
+    "blocked_automatic_languages": [],
+    "include_empty": true,
+    "secret": "DEEPL_API_KEY"
+  },
+  "checks": {
+    "python": false,
+    "shell": false,
+    "prettier": false
+  },
+  "exceptions": {
+    "jeedom": [],
+    "frontend": [],
+    "security": []
+  },
+  "coverage": {
+    "browser_ui": "not-covered-by-static-ci"
+  },
+  "market": {
+    "id": 3104
+  }
+}

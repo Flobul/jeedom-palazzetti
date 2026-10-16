@@ -54,17 +54,27 @@ foreach ($eqLogics as $eqLogic) {
 ?>
 
 <div id="div_healthPalazzetti">
-    <div class="clearfix" style="margin-bottom:10px;">
-        <button type="button" class="btn btn-default pull-right" id="bt_refreshPalazzettiHealth">
-            <i class="fas fa-sync"></i> {{Rafraîchir}}
-        </button>
-        <span class="label label-success" style="font-size:1em;"><?php echo (int) $online; ?> {{En ligne}}</span>
-        <span class="label label-danger" style="font-size:1em;"><?php echo (int) $gatewayOffline; ?> {{Passerelle(s) hors ligne}}</span>
-        <span class="label label-warning" style="font-size:1em;"><?php echo (int) $stoveOffline; ?> {{Poêle(s) indisponible(s)}}</span>
-        <span class="label label-info" style="font-size:1em;"><?php echo count($eqLogics); ?> {{Équipements}}, <?php echo (int) $enabled; ?> {{actifs}}</span>
-    </div>
+<?php include_file('desktop', 'plugin-banner', 'css', 'Palazzetti'); ?>
 
-    <legend><i class="fas fa-heartbeat"></i> {{État du plugin}}</legend>
+    <header id="Palazzetti-health-banner" class="Palazzetti-health-hero">
+        <div class="Palazzetti-health-hero-icon"><i class="fas fa-heartbeat"></i></div>
+        <div class="Palazzetti-health-hero-copy">
+            <span class="Palazzetti-health-eyebrow">{{Diagnostic du plugin}}</span>
+            <h2>{{Santé Palazzetti}}</h2>
+            <p>{{État des poêles, connexion aux passerelles et dernières communications locales.}}</p>
+        </div>
+        <button type="button" class="btn Palazzetti-health-refresh" id="bt_refreshPalazzettiHealth"><i class="fas fa-sync-alt"></i> {{Rafraîchir}}</button>
+    </header>
+
+    <section class="Palazzetti-health-summary" aria-label="{{Résumé de la santé Palazzetti}}">
+        <article><span class="Palazzetti-health-summary-icon"><i class="fas fa-fire"></i></span><div><span>{{Équipements}}</span><strong><?php echo count($eqLogics); ?></strong><small><?php echo (int) $enabled; ?> {{actif(s)}}</small></div></article>
+        <article><span class="Palazzetti-health-summary-icon"><i class="fas fa-wifi"></i></span><div><span>{{En ligne}}</span><strong><?php echo (int) $online; ?></strong><small>{{communication locale}}</small></div></article>
+        <article><span class="Palazzetti-health-summary-icon"><i class="fas fa-network-wired"></i></span><div><span>{{Passerelles hors ligne}}</span><strong><?php echo (int) $gatewayOffline; ?></strong><small>{{injoignable(s)}}</small></div></article>
+        <article><span class="Palazzetti-health-summary-icon"><i class="fas fa-exclamation-triangle"></i></span><div><span>{{Poêles indisponibles}}</span><strong><?php echo (int) $stoveOffline; ?></strong><small>{{passerelle joignable}}</small></div></article>
+    </section>
+
+    <section class="Palazzetti-health-panel">
+    <div class="Palazzetti-health-panel-header"><i class="fas fa-heartbeat"></i><h3>{{État du plugin}}</h3></div>
     <div class="table-responsive">
         <table class="table table-condensed table-bordered">
             <thead>
@@ -91,8 +101,10 @@ foreach ($eqLogics as $eqLogic) {
             </tbody>
         </table>
     </div>
+    </section>
 
-    <legend><i class="fas fa-fire"></i> {{Équipements}}</legend>
+    <section class="Palazzetti-health-panel">
+    <div class="Palazzetti-health-panel-header"><i class="fas fa-fire"></i><h3>{{Équipements}}</h3></div>
     <div class="table-responsive">
         <table class="table table-condensed table-bordered table-striped">
             <thead>
@@ -181,6 +193,7 @@ foreach ($eqLogics as $eqLogic) {
             </tbody>
         </table>
     </div>
+    </section>
 
     <div class="alert alert-info">
         <i class="fas fa-info-circle"></i>

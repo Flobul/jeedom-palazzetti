@@ -1,0 +1,48 @@
+/**
+ * CSS du plugin Palazzetti — Desktop (page d'accueil).
+ *
+ * Styles pour la page d'accueil Jeedom : panneaux d'équipements,
+ * boutons d'action, barre de découverte.
+ */
+:root {
+  --palazzetti-accent: #94ca02;
+  --palazzetti-accent-dark: #17617d;
+  --palazzetti-blue: #1987ea;
+  --palazzetti-green: #78b600;
+}
+
+/* Panel titles */
+.eqLogicThumbnailDisplay .panel-title {
+  background-color: var(--palazzetti-accent) !important;
+  color: #fff !important;
+  border-radius: 10px 10px 0 0 !important;
+}
+
+[data-theme="core2019_Dark"] .eqLogicThumbnailDisplay .panel-title {
+  background-color: var(--palazzetti-blue) !important;
+}
+
+/* Action icons — primary */
+.eqLogicThumbnailDisplay .logoPrimary i {
+  color: var(--palazzetti-accent) !important;
+}
+
+/* Action icons — secondary */
+.eqLogicThumbnailDisplay .logoSecondary i {
+  color: var(--al-info-color, #5bc0de) !important;
+}
+
+/* Equipment card hover */
+.eqLogicDisplayCard.cursor:hover {
+  opacity: .65 !important;
+}
+
+/* Health button badge */
+#bt_healthPalazzetti i {
+  color: var(--al-warning-color, #f0ad4e) !important;
+}
+
+/* Dark theme — box shadows */
+[data-theme="core2019_Dark"] .eqLogicDisplayCard[style*="border-left"]:hover {
+  box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+}

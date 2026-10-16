@@ -30,7 +30,7 @@ if (!class_exists('eqLogic', false)) {
  */
 class Palazzetti extends eqLogic
 {
-    public static $_pluginVersion = '2.0.2';
+    public static $_pluginVersion = '2.1.0';
     private const REQUEST_ERROR_LOG_INTERVAL = 3600;
     private const REDISCOVERY_FAILURE_THRESHOLD = 3;
     private const REDISCOVERY_COOLDOWN = 3600;
@@ -68,14 +68,14 @@ class Palazzetti extends eqLogic
     {
         $command = trim((string) $command);
         if ($command === '' || strlen($command) > self::PROTOCOL_MAX_COMMAND_LENGTH) {
-            throw new InvalidArgumentException('Commande Palazzetti vide ou trop longue.');
+            throw new InvalidArgumentException(__('Commande Palazzetti vide ou trop longue.', __FILE__));
         }
         if (preg_match('/[\x00-\x1F\x7F&?#$`"\\\\]/u', $command) === 1
             || preg_match('/(?:^|[+\s])(undefined|null|nan)(?:$|[+\s])/i', $command) === 1) {
-            throw new InvalidArgumentException('Commande Palazzetti invalide.');
+            throw new InvalidArgumentException(__('Commande Palazzetti invalide.', __FILE__));
         }
         if (preg_match('/^[A-Z]{3}\+[A-Z0-9]{2,4}(?:\+.*)?$/u', $command) !== 1) {
-            throw new InvalidArgumentException('Format de commande Palazzetti invalide.');
+            throw new InvalidArgumentException(__('Format de commande Palazzetti invalide.', __FILE__));
         }
         return $command;
     }
@@ -92,11 +92,11 @@ class Palazzetti extends eqLogic
     {
         $value = trim((string) $value);
         if (preg_match('/^\d{1,3}$/', $value) !== 1) {
-            throw new InvalidArgumentException('Identifiant de paramètre invalide.');
+            throw new InvalidArgumentException(__('Identifiant de paramètre invalide.', __FILE__));
         }
         $id = (int) $value;
         if ($id < 0 || $id > (int) $maximum) {
-            throw new InvalidArgumentException('Identifiant de paramètre hors limites.');
+            throw new InvalidArgumentException(__('Identifiant de paramètre hors limites.', __FILE__));
         }
         return $id;
     }
@@ -112,11 +112,11 @@ class Palazzetti extends eqLogic
     {
         $value = trim((string) $value);
         if (preg_match('/^\d{1,3}$/', $value) !== 1) {
-            throw new InvalidArgumentException('Valeur de paramètre invalide.');
+            throw new InvalidArgumentException(__('Valeur de paramètre invalide.', __FILE__));
         }
         $number = (int) $value;
         if ($number < 0 || $number > 255) {
-            throw new InvalidArgumentException('La valeur doit être comprise entre 0 et 255.');
+            throw new InvalidArgumentException(__('La valeur doit être comprise entre 0 et 255.', __FILE__));
         }
         return $number;
     }

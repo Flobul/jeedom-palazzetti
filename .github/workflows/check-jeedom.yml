@@ -1,0 +1,15 @@
+name: Check Jeedom
+on:
+  workflow_call:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  jeedom:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Jeedom structure and conventions
+        run: python3 .github/ci/jeedom_check.py
+      - name: Plugin-specific preserved checks
+        run: bash .github/ci/extra-checks.sh

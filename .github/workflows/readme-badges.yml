@@ -1,0 +1,70 @@
+name: README badges
+
+# Repairs the repository badges of a PRIVATE repo. shields.io queries the GitHub
+# API unauthenticated, so `img.shields.io/github/*` renders "repo not found" on a
+# private repository (a `dynamic/json` badge pointing at api.github.com fails the
+# same way). The GITHUB_TOKEN provided to this job can read the repo, so
+# .github/ci/readme_badges.py resolves license, top language, last commit, open
+# issues and open pull requests once and rewrites those badges as static
+# shields.io badges. No GitHub API call happens when the README is displayed, so
+# the badges render for anyone, private repo or not.
+#
+# The generated commit contains [skip ci], so a changing commit date does not
+# start the full repository CI again. Any API problem leaves README.md untouched
+# with a warning: a badge refresh must never turn a repository red.
+
+on:
+  push:
+  schedule:
+    # Weekly on Monday at 04:23 UTC, after the market badges job.
+    - cron: '23 4 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: readme-badges-${{ github.repository }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  badges:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # Pushes on feature branches must never write to the default branch.
+    if: github.event_name != 'push' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Test the badge generator
+        run: python3 .github/ci/test_readme_badges.py
+
+      - name: Rewrite the repository badges
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/ci/readme_badges.py
+
+      - name: Commit the README when the badges changed
+        env:
+          BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if git diff --quiet -- README.md; then
+            echo "README.md unchanged, nothing to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "chore(readme): refresh repository badges [skip ci]"
+          git fetch origin "${BRANCH}"
+          git rebase "origin/${BRANCH}"
+          git push origin "HEAD:${BRANCH}"

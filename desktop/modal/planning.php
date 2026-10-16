@@ -58,7 +58,9 @@
 <div>
     <legend style="height: 40px;">
         <span class="objectName"></span>
-            <?php echo ((int) palazzettiPlanningValue($PH, 'CHRSTATUS', 0) === 0) ? '<a class="btn btn-info" id="Palazzetti_ph_onoff" title="Activer/désactiver">INACTIF</a>':'<a class="btn btn-success" id="Palazzetti_ph_onoff" title="Activer/désactiver">ACTIF</a>';  ?>
+            <?php echo ((int) palazzettiPlanningValue($PH, 'CHRSTATUS', 0) === 0)
+                ? '<a class="btn btn-info" id="Palazzetti_ph_onoff" title="' . __('Activer/désactiver', __FILE__) . '">' . __('INACTIF', __FILE__) . '</a>'
+                : '<a class="btn btn-success" id="Palazzetti_ph_onoff" title="' . __('Activer/désactiver', __FILE__) . '">' . __('ACTIF', __FILE__) . '</a>'; ?>
     </legend>
 </div>
 

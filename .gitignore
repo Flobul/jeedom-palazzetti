@@ -1,3 +1,14 @@
 .DS_Store
 /tests/
 *.log
+
+# Local tests and CI tool caches
+/.phpstan-cache/
+/.eslintcache
+/.stylelintcache
+/.coverage
+/coverage.xml
+/.github/ci/vendor/
+/.github/ci/node_modules/
+__pycache__/
+*.py[cod]

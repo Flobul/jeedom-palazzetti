@@ -1,22 +1,5 @@
 <?php
-
-/* This file is part of Jeedom.
- *
- * Jeedom is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Jeedom is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
- */
-
-
+/* This file is part of Jeedom. */
 require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
 include_file('core', 'authentification', 'php');
 if (!isConnect('admin')) {
@@ -25,77 +8,50 @@ if (!isConnect('admin')) {
 }
 $plugin = plugin::byId('Palazzetti');
 $update = $plugin->getUpdate();
-
 ?>
+<?php include_file('desktop', 'plugin-banner', 'css', 'Palazzetti'); ?>
+
 <form class="form-horizontal" id="configuration_plugin_palazzetti">
-    <fieldset>
-		<legend><i class="fas fa-info-circle"></i> {{Général}}</legend>
-		<div class="form-group">
-			<div class="col-lg-4">
-				<?php if (is_object($update)) { ?>
-					<div><label>{{Branche}} :</label> <span class="label label-info"><?php echo htmlspecialchars((string) $update->getConfiguration('version', 'stable'), ENT_QUOTES, 'UTF-8'); ?></span></div>
-					<div><label>{{Source}} :</label> <?php echo htmlspecialchars((string) $update->getSource(), ENT_QUOTES, 'UTF-8'); ?></div>
-					<div><label>{{Version}} :</label> <?php echo htmlspecialchars((string) $update->getLocalVersion(), ENT_QUOTES, 'UTF-8'); ?></div>
-				<?php } ?>
-			</div>
-			<div class="col-lg-6">
-				<a class="btn btn-success btn-sm" target="_blank" rel="noopener noreferrer" href="<?php echo htmlspecialchars((string) $plugin->getDocumentation(), ENT_QUOTES, 'UTF-8'); ?>"><i class="fas fa-book"></i> {{Documentation}}</a>
-				<a class="btn btn-default btn-sm" target="_blank" rel="noopener noreferrer" href="<?php echo htmlspecialchars((string) $plugin->getChangelog(), ENT_QUOTES, 'UTF-8'); ?>"><i class="fas fa-list"></i> {{Changelog}}</a>
-			</div>
-		</div>
-		<legend><i class="fas fa-clock"></i> {{Rafraîchissement}}</legend>
-		<div class="form-group">
-			<label class="col-lg-4 control-label">{{Intervalle de rafraîchissement des informations (cron)}}<sup>
-				<i class="fa fa-question-circle tooltips" title="{{Sélectionnez l'intervalle de récupération des informations}}.</br>{{Par défaut : 5 minutes.}}"></i>
-						</sup></label>
-			<div class="col-lg-4">
-				<select class="configKey form-control" data-l1key="autorefresh" >
-					<option value="* * * * *">{{Toutes les minutes}}</option>
-					<option value="*/2 * * * *">{{Toutes les 2 minutes}}</option>
-					<option value="*/3 * * * *">{{Toutes les 3 minutes}}</option>
-					<option value="*/5 * * * *">{{Toutes les 5 minutes}}</option>
-					<option value="*/10 * * * *">{{Toutes les 10 minutes}}</option>
-					<option value="*/15 * * * *">{{Toutes les 15 minutes}}</option>
-					<option value="*/30 * * * *">{{Toutes les 30 minutes}}</option>
-					<option value="*/45 * * * *">{{Toutes les 45 minutes}}</option>
-					<option value="">{{Jamais}}</option>
-				</select>
-			</div>
-		</div>
-		<legend><i class="fas fa-shield-alt"></i> {{Sécurité}}</legend>
-		<div class="form-group">
-			<label class="col-lg-4 control-label">{{Activer les commandes de modification PARM et HPAR (mode expert)}}</label>
-			<div class="col-lg-4">
-				<input type="checkbox" class="configKey" data-l1key="allow_parameter_writes">
-				<small class="help-block">{{Cette option affiche et autorise les boutons de modification ; elle n'élargit pas la plage des paramètres. Faute de schéma fiable par modèle, les écritures restent limitées de 0 à 255, tandis que les valeurs plus larges peuvent être consultées. Chaque écriture est journalisée.}}</small>
-			</div>
-		</div>
-		<legend><i class="fas fa-network-wired"></i> {{Découverte réseau}}</legend>
-		<div class="form-group">
-			<label class="col-lg-4 control-label">{{Intervalle de découverte automatique}}</label>
-			<div class="col-lg-4">
-				<select class="configKey form-control" data-l1key="auto_discovery_interval">
-					<option value="">{{Jamais}}</option>
-					<option value="*/5 * * * *">{{Toutes les 5 minutes}}</option>
-					<option value="*/10 * * * *">{{Toutes les 10 minutes}}</option>
-					<option value="*/15 * * * *">{{Toutes les 15 minutes}}</option>
-					<option value="*/30 * * * *">{{Toutes les 30 minutes}}</option>
-					<option value="0 * * * *">{{Toutes les heures}}</option>
-					<option value="0 */2 * * *">{{Toutes les 2 heures}}</option>
-					<option value="0 */6 * * *">{{Toutes les 6 heures}}</option>
-					<option value="0 3 * * *">{{Tous les jours à 3 h}}</option>
-				</select>
-				<small class="help-block">{{La recherche automatique actualise en place les équipements reconnus par leur MAC, leur numéro de série ou leur IP. Elle ignore les appareils inconnus et n'en crée jamais, afin d'éviter les doublons.}}</small>
-			</div>
-		</div>
-		<div class="form-group">
-			<label class="col-lg-4 control-label">{{Sous-réseaux additionnels (CIDR)}}<sup>
-				<i class="fa fa-question-circle tooltips" title="{{Ajoutez les réseaux qui ne sont pas directement visibles depuis l'interface réseau de Jeedom.}}"></i>
-			</sup></label>
-			<div class="col-lg-4">
-				<textarea class="configKey form-control" data-l1key="discovery_networks" rows="3" placeholder="192.168.1.0/24&#10;192.168.2.0/24"></textarea>
-				<small class="help-block">{{Plages IPv4 privées en notation CIDR, une plage par ligne ou séparées par une virgule ou un point-virgule. Les préfixes /16 à /32 sont acceptés.}}</small>
-			</div>
-		</div>
-	</fieldset>
+    <div class="Palazzetti-config-page">
+        <header class="Palazzetti-config-hero">
+            <div class="Palazzetti-config-identity">
+                <div class="Palazzetti-config-logo"><img src="plugins/Palazzetti/plugin_info/palazzetti_icon.png" alt="Palazzetti"></div>
+                <div><span class="Palazzetti-config-eyebrow">{{Configuration du plugin}}</span><h2>Palazzetti</h2><p>{{Connectez vos poêles Palazzetti à Jeedom et pilotez-les via Connection Box ou PalaControl.}}</p></div>
+            </div>
+            <div class="Palazzetti-config-meta">
+                <span><i class="fas fa-code-branch"></i> {{Version}} <strong>v<?php echo htmlspecialchars((string) Palazzetti::$_pluginVersion, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                <?php if (is_object($update)) { ?>
+                    <span><i class="fas fa-calendar-alt"></i> <?php echo htmlspecialchars((string) $update->getLocalVersion(), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <span><i class="fas fa-stream"></i> <?php echo htmlspecialchars((string) $update->getConfiguration('version', 'stable'), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <span><i class="fas fa-cloud-download-alt"></i> <?php echo htmlspecialchars((string) $update->getSource(), ENT_QUOTES, 'UTF-8'); ?></span>
+                <?php } ?>
+            </div>
+            <nav class="Palazzetti-config-links" aria-label="{{Ressources du plugin}}">
+                <a class="btn btn-sm Palazzetti-config-link-documentation" target="_blank" rel="noopener noreferrer" href="<?php echo htmlspecialchars((string) $plugin->getDocumentation(), ENT_QUOTES, 'UTF-8'); ?>"><i class="fas fa-book"></i> {{Documentation}}</a>
+                <a class="btn btn-sm Palazzetti-config-link-changelog" target="_blank" rel="noopener noreferrer" href="<?php echo htmlspecialchars((string) $plugin->getChangelog(), ENT_QUOTES, 'UTF-8'); ?>"><i class="fas fa-list"></i> {{Changelog}}</a>
+                <a class="btn btn-sm Palazzetti-config-link-community" target="_blank" rel="noopener noreferrer" href="https://community.jeedom.com/tag/plugin-palazzetti"><i class="fas fa-comments"></i> {{Communauté}}</a>
+            </nav>
+        </header>
+
+        <div class="Palazzetti-config-grid">
+            <section class="Palazzetti-config-card">
+                <header><span class="Palazzetti-config-card-icon"><i class="fas fa-clock"></i></span><div><h3>{{Rafraîchissement}}</h3><p>{{Fréquence de récupération des informations des poêles.}}</p></div></header>
+                <div class="Palazzetti-config-card-body"><div class="form-group"><label class="col-sm-6 control-label">{{Intervalle de rafraîchissement}}</label><div class="col-sm-6"><select class="configKey form-control" data-l1key="autorefresh"><option value="* * * * *">{{Toutes les minutes}}</option><option value="*/2 * * * *">{{Toutes les 2 minutes}}</option><option value="*/3 * * * *">{{Toutes les 3 minutes}}</option><option value="*/5 * * * *">{{Toutes les 5 minutes}}</option><option value="*/10 * * * *">{{Toutes les 10 minutes}}</option><option value="*/15 * * * *">{{Toutes les 15 minutes}}</option><option value="*/30 * * * *">{{Toutes les 30 minutes}}</option><option value="*/45 * * * *">{{Toutes les 45 minutes}}</option><option value="">{{Jamais}}</option></select><span class="help-block">{{Cinq minutes par défaut.}}</span></div></div></div>
+            </section>
+
+            <section class="Palazzetti-config-card">
+                <header><span class="Palazzetti-config-card-icon"><i class="fas fa-shield-alt"></i></span><div><h3>{{Sécurité}}</h3><p>{{Activation explicite des écritures de paramètres en mode expert.}}</p></div></header>
+                <div class="Palazzetti-config-card-body"><div class="form-group"><label class="col-sm-8 control-label">{{Autoriser les modifications PARM et HPAR}}</label><div class="col-sm-4"><input type="checkbox" class="configKey" data-l1key="allow_parameter_writes"></div></div><div class="Palazzetti-config-notice"><i class="fas fa-exclamation-triangle"></i><span>{{Les écritures restent limitées de 0 à 255 et sont journalisées. Activez cette option uniquement si vous maîtrisez les paramètres de votre modèle.}}</span></div></div>
+            </section>
+
+            <section class="Palazzetti-config-card Palazzetti-config-card-wide">
+                <header><span class="Palazzetti-config-card-icon"><i class="fas fa-network-wired"></i></span><div><h3>{{Découverte réseau}}</h3><p>{{Actualisation des équipements connus et réseaux IPv4 additionnels.}}</p></div></header>
+                <div class="Palazzetti-config-card-body Palazzetti-discovery-grid">
+                    <div class="form-group"><label class="col-sm-5 control-label">{{Intervalle de découverte automatique}}</label><div class="col-sm-7"><select class="configKey form-control" data-l1key="auto_discovery_interval"><option value="">{{Jamais}}</option><option value="*/5 * * * *">{{Toutes les 5 minutes}}</option><option value="*/10 * * * *">{{Toutes les 10 minutes}}</option><option value="*/15 * * * *">{{Toutes les 15 minutes}}</option><option value="*/30 * * * *">{{Toutes les 30 minutes}}</option><option value="0 * * * *">{{Toutes les heures}}</option><option value="0 */2 * * *">{{Toutes les 2 heures}}</option><option value="0 */6 * * *">{{Toutes les 6 heures}}</option><option value="0 3 * * *">{{Tous les jours à 3 h}}</option></select><span class="help-block">{{Les équipements sont actualisés en place ; aucun appareil inconnu n'est créé.}}</span></div></div>
+                    <div class="form-group"><label class="col-sm-5 control-label">{{Sous-réseaux additionnels}}</label><div class="col-sm-7"><textarea class="configKey form-control" data-l1key="discovery_networks" rows="3" placeholder="192.168.1.0/24&#10;192.168.2.0/24"></textarea><span class="help-block">{{Plages IPv4 privées CIDR, une par ligne ou séparées par une virgule ou un point-virgule.}}</span></div></div>
+                </div>
+            </section>
+        </div>
+    </div>
 </form>
+<?php include_file('desktop', 'configuration', 'js', 'Palazzetti'); ?>

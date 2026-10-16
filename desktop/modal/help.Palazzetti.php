@@ -17,10 +17,10 @@
  */
 
 if (!isConnect('admin')) {
-    throw new Exception('{{401 - Accès non autorisé}}');
+    throw new Exception(__('401 - Accès non autorisé', __FILE__));
 }
 ?>
 <legend>{{Aide}}</legend>
-Pour obtenir de l'aide au paramétrage du plugin, merci de consulter la documentation : <a href="https://doc.jeedom.com/" target="_blank" rel="noopener noreferrer">Plugin Palazzetti</a>
+<?php echo __('Pour obtenir de l’aide au paramétrage du plugin, merci de consulter la documentation', __FILE__); ?> : <a href="https://doc.jeedom.com/" target="_blank" rel="noopener noreferrer">Plugin Palazzetti</a>
 
 

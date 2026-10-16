@@ -1,0 +1,25 @@
+name: Check Frontend
+on:
+  workflow_call:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  frontend:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: .github/ci/package-lock.json
+      - name: Install pinned frontend tools
+        working-directory: .github/ci
+        run: npm ci --ignore-scripts
+      - name: Syntax, inline scripts and CSS structure
+        run: python3 .github/ci/frontend_check.py
+      - name: ESLint maintained JavaScript
+        run: bash .github/ci/run_eslint.sh
+      - name: Optional existing Prettier coverage
+        run: bash .github/ci/run_prettier.sh

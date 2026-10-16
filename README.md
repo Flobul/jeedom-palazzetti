@@ -1,10 +1,18 @@
-# Plugin Palazzetti pour Jeedom
+# Palazzetti pour Jeedom
 
-[![License](https://badgen.net/github/license/Flobul/Jeedom_Palazzetti?icon=github)](https://github.com/Flobul/Jeedom_Palazzetti)
-[![Language](https://badgen.net/static/Language/PHP/blue?icon=github)](https://github.com/Flobul/Jeedom_Palazzetti)
-[![Last commit](https://badgen.net/github/last-commit/Flobul/Jeedom_Palazzetti?icon=github)](https://github.com/Flobul/Jeedom_Palazzetti/commits)
-[![Open issues](https://badgen.net/github/open-issues/Flobul/Jeedom_Palazzetti?icon=github)](https://github.com/Flobul/Jeedom_Palazzetti/issues)
-[![Open pull requests](https://badgen.net/github/open-prs/Flobul/Jeedom_Palazzetti?icon=github)](https://github.com/Flobul/Jeedom_Palazzetti/pulls)
+[![License](https://img.shields.io/badge/License-GPL--2.0-blue?style=flat-square)](https://github.com/Flobul/jeedom-palazzetti/blob/HEAD/LICENSE)
+[![Language](https://img.shields.io/badge/Language-PHP-informational?style=flat-square)](https://github.com/Flobul/jeedom-palazzetti)
+[![Last commit](https://img.shields.io/badge/Last_commit-30/08/2026-yellow?style=flat-square)](https://github.com/Flobul/jeedom-palazzetti/commits)
+[![Open issues](https://img.shields.io/badge/Open_issues-0-brightgreen?style=flat-square)](https://github.com/Flobul/jeedom-palazzetti/issues)
+[![Open pull requests](https://img.shields.io/badge/Open_pull_requests-0-brightgreen?style=flat-square)](https://github.com/Flobul/jeedom-palazzetti/pulls)
+
+<!-- market-badges:start -->
+[![Note](https://img.shields.io/badge/Note-5%2F5-brightgreen?style=flat-square)](https://market.jeedom.com/index.php?v=d&p=market_display&id=3104)
+[![Prix](https://img.shields.io/badge/Prix-Gratuit-brightgreen?style=flat-square)](https://market.jeedom.com/index.php?v=d&p=market_display&id=3104)
+[![Achats](https://img.shields.io/badge/Achats-23-blueviolet?style=flat-square)](https://market.jeedom.com/index.php?v=d&p=market_display&id=3104)
+[![Téléchargements](https://img.shields.io/badge/T%C3%A9l%C3%A9chargements-2%20645-informational?style=flat-square)](https://market.jeedom.com/index.php?v=d&p=market_display&id=3104)
+[![Commentaires](https://img.shields.io/badge/Commentaires-0-lightgrey?style=flat-square)](https://market.jeedom.com/index.php?v=d&p=market_display&id=3104)
+<!-- market-badges:end -->
 
 Plugin Jeedom pour superviser et piloter les poêles Palazzetti.
 

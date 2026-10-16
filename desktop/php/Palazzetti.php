@@ -17,7 +17,7 @@
  */
 
 if (!isConnect('admin')) {
-	throw new Exception('{{401 - Accès non autorisé}}');
+	throw new Exception(__('401 - Accès non autorisé', __FILE__));
 }
 $plugin = plugin::byId('Palazzetti');
 sendVarToJS('eqType', $plugin->getId());
@@ -30,6 +30,7 @@ $palazzettiCommandValue = function ($eqLogic, $logicalId) {
 	return is_object($cmd) ? $cmd->execCmd() : null;
 };
 ?>
+<link rel="stylesheet" href="core/php/getCSS.php?file=plugins/Palazzetti/desktop/css/Palazzetti.css">
 
 <div class="row row-overflow">
 	<div class="col-xs-12 eqLogicThumbnailDisplay">
@@ -53,7 +54,7 @@ $palazzettiCommandValue = function ($eqLogic, $logicalId) {
 						<span>{{Configuration}}</span>
 					</div>
 					<div class="cursor logoSecondary" id="bt_healthPalazzetti">
-						<i class="fas fa-medkit"></i>
+						<i class="fas fa-heartbeat"></i>
 						<br>
 						<span>{{Santé}}</span>
 					</div>

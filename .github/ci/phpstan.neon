@@ -1,0 +1,18 @@
+parameters:
+  level: 1
+  tmpDir: %currentWorkingDirectory%/.phpstan-cache
+  bootstrapFiles:
+    - %currentWorkingDirectory%/jeedom-core/vendor/autoload.php
+    - %currentWorkingDirectory%/.github/ci/jeedom-stubs.php
+  scanDirectories:
+    - %currentWorkingDirectory%/jeedom-core/core/class
+    - %currentWorkingDirectory%/jeedom-core/core/com
+    - %currentWorkingDirectory%/jeedom-core/core/php
+  excludePaths:
+    analyseAndScan:
+      - %currentWorkingDirectory%/vendor (?)
+      - %currentWorkingDirectory%/node_modules (?)
+      - %currentWorkingDirectory%/3rdparty (?)
+      - %currentWorkingDirectory%/third_party (?)
+      - %currentWorkingDirectory%/tests (?)
+  reportUnmatchedIgnoredErrors: false

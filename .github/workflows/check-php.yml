@@ -1,0 +1,41 @@
+name: Check PHP
+on:
+  workflow_call:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  syntax:
+    name: PHP ${{ matrix.php }} syntax
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ["7.4", "8.2"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      - name: Lint maintained PHP
+        run: python3 .github/ci/php_lint.py
+  phpstan:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with:
+          repository: jeedom/core
+          ref: '90a95f1dcef74a65d77374a1fed427541032fe82'
+          path: jeedom-core
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          tools: composer:v2
+      - name: Install pinned PHPStan
+        working-directory: .github/ci
+        run: composer install --no-interaction --no-progress --prefer-dist
+      - name: Analyse plugin against pinned Jeedom core
+        run: bash .github/ci/run_phpstan.sh
