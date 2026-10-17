@@ -11,7 +11,7 @@
 		"pt_PT": "O plugin Palazzetti permite-lhe controlar as salamandras a pellets Palazzetti utilizando o gateway Connection Box, bem como os módulos PalaControl criados pela DomoChip que simulam uma Connection Box. As funções oferecidas pelo plugin são idênticas às da aplicação móvel oficial Palazzetti App. Um simples widget de controlo está disponível no painel de instrumentos, permitindo-lhe * ligar e desligar o aquecedor * alterar o ponto de regulação * definir a velocidade da ventoinha * alterar a intensidade do fogo * gerir os horários de acordo com a filosofia do aquecedor * visualizar todas as informações sobre o aquecedor e a Connection Box"
 	},
 	"installation": "Sélectionnez un intervalle de rafraîchissement des informations.<br>Ajoutez un équipement, entrez son adresse IP, activez-le et sauvegardez.",
-	"licence": "AGPL",
+	"licence": "GPL-3.0",
 	"author": "Thibaut.Trarbach (modifié par Flobul)",
 	"require": "4.4",
 	"category": "wellness",
