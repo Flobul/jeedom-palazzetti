@@ -14,12 +14,12 @@
  * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
  */
 
-	const palazzettiCommandBody = document.querySelector('#table_cmd tbody');
+	var palazzettiCommandBody = document.querySelector('#table_cmd tbody');
 	if (palazzettiCommandBody && typeof Sortable !== 'undefined') {
 	    new Sortable(palazzettiCommandBody, {draggable: '.cmd', animation: 150});
 	}
 
-	const palazzettiHealthButton = document.getElementById('bt_healthPalazzetti');
+	var palazzettiHealthButton = document.getElementById('bt_healthPalazzetti');
 	palazzettiHealthButton?.addEventListener('click', function() {
 	    jeeDialog.dialog({
 	        id: 'md_palazzettiHealth',
@@ -28,7 +28,7 @@
 	    });
 	});
 
-	const palazzettiHeatingHistoryButton = document.getElementById('bt_heatingHistoryPalazzetti');
+	var palazzettiHeatingHistoryButton = document.getElementById('bt_heatingHistoryPalazzetti');
 	palazzettiHeatingHistoryButton?.addEventListener('click', function() {
 	    jeeDialog.dialog({
 	        id: 'md_palazzettiHeatingHistory',
@@ -46,7 +46,7 @@
 	    });
 	});
 
-	const palazzettiDiscoveryButton = document.getElementById('bt_discoverPalazzetti');
+	var palazzettiDiscoveryButton = document.getElementById('bt_discoverPalazzetti');
 	function setPalazzettiDiscoveryBusy(busy) {
 	    if (!palazzettiDiscoveryButton) return;
 	    palazzettiDiscoveryButton.dataset.busy = busy ? '1' : '0';
@@ -57,15 +57,15 @@
 	}
 
 	function palazzettiEscapeHtml(value) {
-	    const element = document.createElement('span');
+	    var element = document.createElement('span');
 	    element.textContent = value == null ? '' : String(value);
 	    return element.innerHTML;
 	}
-	let palazzettiDiscoveryResult = null;
-	let palazzettiDiscoveryHasChanges = false;
+	var palazzettiDiscoveryResult = null;
+	var palazzettiDiscoveryHasChanges = false;
 
 	function palazzettiDiscoveryState(device) {
-	    const states = {
+	    var states = {
 	        create: ['label-info', '{{Nouvel équipement}}'],
 	        update: ['label-warning', '{{Adresse à actualiser}}'],
 	        unchanged: ['label-default', '{{Déjà enregistré}}'],
@@ -73,16 +73,16 @@
 	        updated: ['label-success', '{{Équipement actualisé}}'],
 	        replaced: ['label-success', '{{Équipement remplacé}}']
 	    };
-	    const state = states[device.action];
+	    var state = states[device.action];
 	    return state ? '<span class="label ' + state[0] + '">' + state[1] + '</span>' : '';
 	}
 
 	function palazzettiDiscoveryActions(device) {
-	    const identity = palazzettiEscapeHtml(device.identity || '');
+	    var identity = palazzettiEscapeHtml(device.identity || '');
 	    if (!identity) {
 	        return '<span class="text-danger">{{Identité indisponible}}</span>';
 	    }
-	    const state = palazzettiDiscoveryState(device);
+	    var state = palazzettiDiscoveryState(device);
 	    if (Number(device.id) <= 0) {
 	        return state + '<button type="button" class="btn btn-success btn-xs btn-block palazzetti-discovery-action" '
 	            + 'data-discovery-mode="overwrite" data-discovery-identity="' + identity + '">'
@@ -99,14 +99,14 @@
 	}
 
 	function palazzettiDiscoveryDetails(result) {
-	    const devices = Array.isArray(result.devices) ? result.devices : [];
-	    const rows = devices.map(function(device) {
-	        const existing = device.id
+	    var devices = Array.isArray(result.devices) ? result.devices : [];
+	    var rows = devices.map(function(device) {
+	        var existing = device.id
 	            ? '<strong>' + palazzettiEscapeHtml(device.existingName) + '</strong><br><code>'
 	                + palazzettiEscapeHtml(device.existingIp) + '</code> — '
 	                + (device.existingEnabled ? '{{actif}}' : '{{désactivé}}')
 	            : '<span class="text-muted">{{Aucun équipement correspondant}}</span>';
-	        const versions = device.versions
+	        var versions = device.versions
 	            ? '<br><small class="text-muted">' + palazzettiEscapeHtml(device.versions) + '</small>'
 	            : '';
 	        return '<tr>'
@@ -156,14 +156,14 @@
 	}
 
 	function destroyPalazzettiDiscoveryDialog() {
-	    const dialog = document.getElementById('md_palazzettiDiscovery');
+	    var dialog = document.getElementById('md_palazzettiDiscovery');
 	    if (dialog) {
 	        jeeDialog.get(dialog).destroy();
 	    }
 	}
 
 	function refreshPalazzettiDiscoveryDialog() {
-	    const content = jeeDialog.get('#md_palazzettiDiscovery', 'content');
+	    var content = jeeDialog.get('#md_palazzettiDiscovery', 'content');
 	    if (content && palazzettiDiscoveryResult) {
 	        content.innerHTML = palazzettiDiscoveryDetails(palazzettiDiscoveryResult);
 	    }
@@ -185,7 +185,7 @@
 
 	function mergePalazzettiDiscoveryDevice(device) {
 	    if (!palazzettiDiscoveryResult || !Array.isArray(palazzettiDiscoveryResult.devices) || !device) return;
-	    const index = palazzettiDiscoveryResult.devices.findIndex(function(current) {
+	    var index = palazzettiDiscoveryResult.devices.findIndex(function(current) {
 	        return current.identity === device.identity;
 	    });
 	    if (index >= 0) {
@@ -220,7 +220,7 @@
 	                return;
 	            }
 
-	            const result = data.result || {};
+	            var result = data.result || {};
 	            if (!result.found) {
 	                setPalazzettiDiscoveryActionBusy(sourceButton, false);
 	                jeedomUtils.showAlert({
@@ -235,7 +235,7 @@
 	                return;
 	            }
 
-	            const changed = Number(result.created) + Number(result.updated) + Number(result.replaced || 0) > 0;
+	            var changed = Number(result.created) + Number(result.updated) + Number(result.replaced || 0) > 0;
 	            palazzettiDiscoveryHasChanges = palazzettiDiscoveryHasChanges || changed;
 	            if (Array.isArray(result.devices) && result.devices[0]) {
 	                mergePalazzettiDiscoveryDevice(result.devices[0]);
@@ -256,7 +256,7 @@
 	}
 
 	document.body.addEventListener('click', function(event) {
-	    const actionButton = event.target.closest('#md_palazzettiDiscovery .palazzetti-discovery-action');
+	    var actionButton = event.target.closest('#md_palazzettiDiscovery .palazzetti-discovery-action');
 	    if (!actionButton || actionButton.disabled) return;
 	    discoverPalazzetti(
 	        actionButton.dataset.discoveryMode,
@@ -271,8 +271,8 @@
 	});
 
 function printEqLogic(_eqLogic) {
-	    const parameterButton = document.getElementById('buttonParam');
-	    const palaControl = document.getElementById('showWPalaControl');
+	    var parameterButton = document.getElementById('buttonParam');
+	    var palaControl = document.getElementById('showWPalaControl');
 	    if (parameterButton) parameterButton.style.display = 'none';
 	    if ([true, 1, '1', 'true'].includes(_eqLogic.configuration.isWirelessPalaControl)) {
 	        if (parameterButton) parameterButton.style.display = '';
@@ -281,10 +281,10 @@ function printEqLogic(_eqLogic) {
 	}
 
 	document.body.addEventListener('click', function(event) {
-	  const button = event.target.closest('.cmdAction[data-action="parametres"], .cmdAction[data-action="hiddenParametres"]');
+	  var button = event.target.closest('.cmdAction[data-action="parametres"], .cmdAction[data-action="hiddenParametres"]');
 	  if (!button) return;
-	  const hidden = button.dataset.action === 'hiddenParametres';
-	  const equipmentId = document.querySelector('.eqLogicAttr[data-l1key="id"]').jeeValue();
+	  var hidden = button.dataset.action === 'hiddenParametres';
+	  var equipmentId = document.querySelector('.eqLogicAttr[data-l1key="id"]').jeeValue();
 	  jeeDialog.dialog({
 	    id: hidden ? 'md_palazzettiHiddenParameters' : 'md_palazzettiParameters',
 	    title: hidden ? '{{Paramètres cachés du poêle}}' : '{{Paramètres du poêle}}',
@@ -302,7 +302,6 @@ function addCmdToTable(_cmd) {
     var tr = '<tr class="cmd" data-cmd_id="' + init(_cmd.id) + '">';
     tr += '<td class="hidden-xs">';
     tr += '<span class="cmdAttr" data-l1key="id"></span>';
-    tr += '<span class="cmdAttr" data-l1key="logicalId" style="display:none;"></span>';
     tr += '</td>';
 
     tr += '<td>';
@@ -354,7 +353,7 @@ function addCmdToTable(_cmd) {
     tr += '</tr>';
 	    if (!palazzettiCommandBody) return;
 	    palazzettiCommandBody.insertAdjacentHTML('beforeend', tr);
-	    const newRow = palazzettiCommandBody.lastElementChild;
+	    var newRow = palazzettiCommandBody.lastElementChild;
 	    buildPalaSelectCmd({
 	        id: document.querySelector('.eqLogicAttr[data-l1key="id"]').jeeValue(),
 	        filter: {
@@ -388,7 +387,7 @@ buildPalaSelectCmd = function(_params) {
           (init(_params.filter.subType, 'all') == 'all' || cmds[i].subType == _params.filter.subType) &&
           (init(_params.filter.isHistorized, 'all') == 'all' || cmds[i].isHistorized == _params.filter.isHistorized)
         ) {
-	          const option = document.createElement('option');
+	          var option = document.createElement('option');
 	          option.value = cmds[i].logicalId;
 	          option.dataset.type = cmds[i].type;
 	          option.dataset.subtype = cmds[i].subType;
@@ -403,11 +402,3 @@ buildPalaSelectCmd = function(_params) {
   })
 }
 
-saveEqLogic = function(_eqLogic) {
-    _eqLogic.cmd.forEach(cmd => {
-      if (cmd.logicalId == '') {
-	    cmd.logicalId = cmd.configuration.actionCmd;
-      }
-    });
-	return _eqLogic;
-}

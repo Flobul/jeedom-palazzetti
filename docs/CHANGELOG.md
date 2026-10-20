@@ -1,5 +1,11 @@
 # Historique des versions
 
+## Non publié
+
+## 2.1.1
+
+- Correction : les commandes d'action simples (Allumage, Extinction, etc.) étaient bloquées par un rejet d'options inconnues, car Jeedom injecte systématiquement des métadonnées d'exécution (`user_login`, `user_id`) dans les options transmises.
+
 ## 2.0.1
 
 - Découverte manuelle traitée appareil par appareil grâce à des actions placées directement dans chaque ligne du tableau.

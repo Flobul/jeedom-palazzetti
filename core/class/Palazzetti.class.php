@@ -30,7 +30,7 @@ if (!class_exists('eqLogic', false)) {
  */
 class Palazzetti extends eqLogic
 {
-    public static $_pluginVersion = '2.1.0';
+    public static $_pluginVersion = '2.1.1';
     private const REQUEST_ERROR_LOG_INTERVAL = 3600;
     private const REDISCOVERY_FAILURE_THRESHOLD = 3;
     private const REDISCOVERY_COOLDOWN = 3600;
@@ -2300,6 +2300,20 @@ class Palazzetti extends eqLogic
 
         $suffix = '';
         if (is_array($options)) {
+            // Jeedom injecte systématiquement des métadonnées d'execution
+            // (user_login, user_id, ...) dans les options. Elles ne sont pas
+            // des paramètres de commande et doivent être ignorées avant la
+            // validation afin de ne pas bloquer les actions simples comme
+            // CMD+ON / CMD+OFF.
+            $options = array_diff_key($options, array(
+                'user_login' => 0,
+                'user_id' => 0,
+                'username' => 0,
+                'title' => 0,
+                'callEvent' => 0,
+                'data' => 0,
+                'linkData' => 0,
+            ));
             if (isset($options['jour'], $options['tranche'], $options['programme'])) {
                 $suffix = implode('+', array(
                     $this->validatedInteger($options['jour'], 1, 7, 'jour'),
