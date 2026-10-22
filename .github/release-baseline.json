@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "plugin_id": "Palazzetti",
+  "class_file": "core/class/Palazzetti.class.php",
+  "reference_version": "2.1.1",
+  "reference_commit": "904939c6dca410c6f95bb012e041e3d7536af261"
+}

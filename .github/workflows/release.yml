@@ -1,0 +1,271 @@
+name: Release stable plugin version
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Release automation simulation or real release
+        required: true
+        default: simulate
+        type: choice
+        options:
+          - simulate
+          - release
+      ref:
+        description: Commit or branch to evaluate (must resolve on Beta)
+        required: true
+        default: Beta
+        type: string
+
+concurrency:
+  group: stable-release-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Release automation simulation and validation
+    if: >-
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == github.event.repository.default_branch) ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      action: ${{ steps.guard.outputs.action }}
+      reason: ${{ steps.guard.outputs.reason }}
+      plugin_id: ${{ steps.guard.outputs.plugin_id }}
+      version: ${{ steps.guard.outputs.version }}
+      tag: ${{ steps.guard.outputs.tag }}
+      target_commit: ${{ steps.guard.outputs.target_commit }}
+      authorized: ${{ steps.target.outputs.authorized }}
+    steps:
+      - name: Resolve immutable target and authorization
+        id: target
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          WORKFLOW_RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          REQUESTED_REF: ${{ inputs.ref || 'Beta' }}
+          REQUESTED_MODE: ${{ inputs.mode || 'simulate' }}
+          RELEASE_AUTOMATION_ENABLED: ${{ vars.RELEASE_AUTOMATION_ENABLED || 'false' }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_run" ]; then
+            target="$WORKFLOW_RUN_SHA"
+            ci_conclusion="$WORKFLOW_RUN_CONCLUSION"
+            requested_mode="release"
+          else
+            target="$REQUESTED_REF"
+            ci_conclusion="manual-check-required"
+            requested_mode="$REQUESTED_MODE"
+          fi
+          authorized=false
+          if [ "$requested_mode" = "release" ] && [ "$RELEASE_AUTOMATION_ENABLED" = "true" ]; then
+            authorized=true
+          fi
+          {
+            echo "target=$target"
+            echo "ci_conclusion=$ci_conclusion"
+            echo "requested_mode=$requested_mode"
+            echo "authorized=$authorized"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check out the exact candidate
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.target.outputs.target }}
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
+      - name: Require candidate to be the current default-branch commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          target="$(git rev-parse 'HEAD^{commit}')"
+          default_sha="$(gh api "repos/$GITHUB_REPOSITORY/commits/${{ github.event.repository.default_branch }}" --jq '.sha')"
+          [ "$target" = "$default_sha" ] || { echo "Candidate is not the current default-branch commit" >&2; exit 1; }
+
+      - name: Require a successful blocking CI run for manual evaluation
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          target="$(git rev-parse 'HEAD^{commit}')"
+          count="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs?per_page=100" \
+            --jq '.workflow_runs[] | select(.path == ".github/workflows/ci.yml" and .head_sha == "'"$target"'" and .status == "completed" and .conclusion == "success") | .id' \
+            | wc -l | tr -d '[:space:]')"
+          if [ "$count" -lt 1 ]; then
+            echo "No successful blocking CI run exists for $target" >&2
+            exit 1
+          fi
+
+      - name: Test release guard
+        run: python3 .github/ci/test_release_guard.py
+
+      - name: Build read-only release plan
+        id: guard
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CI_CONCLUSION: success
+        run: >-
+          python3 .github/ci/release_guard.py
+          --root .
+          --baseline .github/release-baseline.json
+          --target-commit "$(git rev-parse 'HEAD^{commit}')"
+          --ci-conclusion "$CI_CONCLUSION"
+          --report "$RUNNER_TEMP/release-plan.json"
+          --notes-output "$RUNNER_TEMP/release-notes.md"
+          --github-output "$GITHUB_OUTPUT"
+
+      - name: Upload release plan and exact notes
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-plan-${{ steps.guard.outputs.version }}-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/release-plan.json
+            ${{ runner.temp }}/release-notes.md
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    name: Create immutable tag and GitHub Release
+    needs: plan
+    if: >-
+      needs.plan.outputs.authorized == 'true' &&
+      needs.plan.outputs.action != 'none'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: release-production
+    permissions:
+      contents: write
+    outputs:
+      release_url: ${{ steps.release.outputs.release_url }}
+    steps:
+      - name: Check out validated commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.target_commit }}
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
+      - name: Download reviewed release plan
+        uses: actions/download-artifact@v7
+        with:
+          name: release-plan-${{ needs.plan.outputs.version }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/release-plan
+
+      - name: Create tag only when absent
+        if: needs.plan.outputs.action == 'create-tag-and-release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.plan.outputs.tag }}
+          TARGET_COMMIT: ${{ needs.plan.outputs.target_commit }}
+        run: |
+          set -euo pipefail
+          if git show-ref --verify --quiet "refs/tags/$TAG"; then
+            actual="$(git rev-list -n 1 "refs/tags/$TAG")"
+            [ "$actual" = "$TARGET_COMMIT" ] || { echo "Existing tag points elsewhere" >&2; exit 1; }
+          else
+            gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
+              -f ref="refs/tags/$TAG" \
+              -f sha="$TARGET_COMMIT" >/dev/null
+          fi
+
+      - name: Revalidate immutable tag and create Release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.plan.outputs.tag }}
+          TARGET_COMMIT: ${{ needs.plan.outputs.target_commit }}
+          NOTES_FILE: ${{ runner.temp }}/release-plan/release-notes.md
+        run: |
+          set -euo pipefail
+          ref_json="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG")"
+          remote_sha="$(printf '%s' "$ref_json" | jq -r '.object.sha')"
+          remote_type="$(printf '%s' "$ref_json" | jq -r '.object.type')"
+          if [ "$remote_type" = "tag" ]; then
+            remote_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$remote_sha" --jq '.object.sha')"
+          elif [ "$remote_type" != "commit" ]; then
+            echo "Unsupported Git tag object type: $remote_type" >&2
+            exit 1
+          fi
+          if [ "$remote_sha" != "$TARGET_COMMIT" ]; then
+            echo "Immutable tag does not point to the validated commit" >&2
+            exit 1
+          fi
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            url="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json url --jq '.url')"
+          else
+            url="$(gh api --method POST "repos/$GITHUB_REPOSITORY/releases" \
+              -f tag_name="$TAG" \
+              -f target_commitish="$TARGET_COMMIT" \
+              -f name="$TAG" \
+              -F draft=false \
+              -F prerelease=false \
+              --raw-field body="$(cat "$NOTES_FILE")" \
+              --jq '.html_url')"
+          fi
+          echo "release_url=$url" >> "$GITHUB_OUTPUT"
+
+  notify-central:
+    name: Notify central publisher (polling remains the fallback)
+    needs: [plan, publish]
+    if: needs.publish.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Send validated repository_dispatch when explicitly enabled
+        env:
+          CENTRAL_DISPATCH_ENABLED: ${{ vars.CENTRAL_DISPATCH_ENABLED || 'false' }}
+          CENTRAL_DISPATCH_TOKEN: ${{ secrets.CENTRAL_DISPATCH_TOKEN }}
+          TAG: ${{ needs.plan.outputs.tag }}
+          VERSION: ${{ needs.plan.outputs.version }}
+          TARGET_COMMIT: ${{ needs.plan.outputs.target_commit }}
+          RELEASE_URL: ${{ needs.publish.outputs.release_url }}
+        run: |
+          set -euo pipefail
+          if [ "$CENTRAL_DISPATCH_ENABLED" != "true" ]; then
+            echo "Central dispatch is disabled; scheduled polling will detect the Release."
+            exit 0
+          fi
+          if [ -z "$CENTRAL_DISPATCH_TOKEN" ]; then
+            echo "CENTRAL_DISPATCH_TOKEN is not configured; polling remains available." >&2
+            exit 0
+          fi
+          payload="$(python3 - <<'PY'
+          import json, os
+          print(json.dumps({
+              "event_type": "jeedom_plugin_release",
+              "client_payload": {
+                  "folder": "jeedom-palazzetti",
+                  "repository": os.environ["GITHUB_REPOSITORY"],
+                  "tag": os.environ["TAG"],
+                  "version": os.environ["VERSION"],
+                  "commit_sha": os.environ["TARGET_COMMIT"],
+                  "release_url": os.environ["RELEASE_URL"],
+              },
+          }))
+          PY
+          )"
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer $CENTRAL_DISPATCH_TOKEN" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            --data "$payload" \
+            "https://api.github.com/repos/Flobul/.jeedom/dispatches"

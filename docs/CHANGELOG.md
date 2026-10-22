@@ -2,7 +2,7 @@
 
 ## Non publié
 
-## 2.1.1
+## Version 2.1.1 (20/10/2026)
 
 - Correction : les commandes d'action simples (Allumage, Extinction, etc.) étaient bloquées par un rejet d'options inconnues, car Jeedom injecte systématiquement des métadonnées d'exécution (`user_login`, `user_id`) dans les options transmises.
 

@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - name: Jeedom structure and conventions
         run: python3 .github/ci/jeedom_check.py
       - name: Plugin-specific preserved checks

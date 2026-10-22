@@ -12,3 +12,6 @@
 /.github/ci/node_modules/
 __pycache__/
 *.py[cod]
+
+# Local WordPress migration workspaces
+/.wordpress-*/
