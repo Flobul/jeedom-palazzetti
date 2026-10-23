@@ -86,6 +86,12 @@ class ReleaseWorkflowTests(unittest.TestCase):
         workflow = (ROOT / ".github" / "workflows" / "check-jeedom.yml").read_text(encoding="utf-8")
         self.assertIn("fetch-depth: 0", workflow)
 
+    def test_central_dispatch_targets_current_repository(self):
+        text = WORKFLOW.read_text(encoding="utf-8")
+        config = json.loads((ROOT / ".github" / "ci" / "ci-config.json").read_text())
+        expected = config["plugin"]["repository"]
+        self.assertIn(f'"folder": "{expected}"', text)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

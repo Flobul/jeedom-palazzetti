@@ -169,6 +169,22 @@ class ReleaseGuardTests(unittest.TestCase):
         self.assertEqual(plan.action, "none")
         self.assertEqual(plan.reason, "release-exists")
 
+    def test_maintenance_commit_after_existing_release_does_not_create_a_release(self):
+        release_commit = self.commit_version("0.97.0")
+        (self.root / "README.md").write_text("maintenance only\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(self.root), "add", "README.md"], check=True)
+        subprocess.run(["git", "-C", str(self.root), "commit", "-qm", "maintenance"], check=True)
+        maintenance_commit = self.git("rev-parse", "HEAD")
+
+        plan = self.evaluate(
+            target_commit=maintenance_commit,
+            tag_commits={"v0.97.0": release_commit},
+            release_tags={"v0.97.0"},
+        )
+
+        self.assertEqual(plan.action, "none")
+        self.assertEqual(plan.reason, "release-exists")
+
     def test_existing_tag_at_validated_commit_recovers_release_creation_failure(self):
         commit = self.commit_version("0.97.0")
         plan = self.evaluate(target_commit=commit, tag_commits={"v0.97.0": commit})

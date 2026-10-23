@@ -1,0 +1,15 @@
+name: Translation validation
+on:
+  workflow_call:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Test translation workflow separation
+        run: python3 .github/ci/test_translation_workflows.py
+      - name: Validate existing i18n files and placeholders
+        run: python3 .github/ci/validate_i18n.py --root . --expected de_DE,en_US,es_ES,fr_FR,it_IT,pt_PT --require-languages

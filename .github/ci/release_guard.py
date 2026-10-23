@@ -230,14 +230,24 @@ def evaluate_release(
 
     tag_commit = tag_commits.get(tag, "").lower()
     release_exists = tag in release_tags
-    if tag_commit and tag_commit != target:
-        raise ReleaseGuardError(
-            f"Existing immutable tag {tag} points to a different commit and must never be moved"
-        )
     if release_exists:
         if not tag_commit:
             raise ReleaseGuardError(f"GitHub Release {tag} exists without a fetched immutable tag")
+        try:
+            subprocess.run(
+                ["git", "-C", str(root), "merge-base", "--is-ancestor", tag_commit, target],
+                check=True,
+                capture_output=True,
+            )
+        except subprocess.CalledProcessError as exc:
+            raise ReleaseGuardError(
+                f"Existing immutable tag {tag} is not an ancestor of the validated target"
+            ) from exc
         action, reason = "none", "release-exists"
+    elif tag_commit and tag_commit != target:
+        raise ReleaseGuardError(
+            f"Existing immutable tag {tag} points to a different commit and must never be moved"
+        )
     elif tag_commit:
         action, reason = "create-release", "tag-exists-at-target"
     else:

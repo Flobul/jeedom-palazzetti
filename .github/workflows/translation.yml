@@ -1,52 +1,56 @@
-name: Translation
+name: Generate translations
 on:
-  workflow_call:
   workflow_dispatch:
+concurrency:
+  group: translations-${{ github.repository }}
+  cancel-in-progress: false
 permissions:
   contents: read
 jobs:
-  validate:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v7
-      - name: Validate existing i18n files and placeholders
-        run: python3 .github/ci/validate_i18n.py --root . --expected de_DE,en_US,es_ES,fr_FR,it_IT,pt_PT
   translate:
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
       pull-requests: write
     steps:
-      - name: Require the documented translation secret
+      - name: Check whether DeepL generation is configured
+        id: deepl
         env:
           DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
         run: |
           if [ -z "$DEEPL_API_KEY" ]; then
-            echo "::error::Translation blocked: repository secret DEEPL_API_KEY is not configured."
-            exit 1
+            echo "::notice::Translation generation skipped: repository secret DEEPL_API_KEY is not configured."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
       - uses: actions/checkout@v7
+        if: steps.deepl.outputs.configured == 'true'
         with:
           path: plugin
       - uses: actions/checkout@v7
+        if: steps.deepl.outputs.configured == 'true'
         with:
           repository: jeedom/core
           ref: '90a95f1dcef74a65d77374a1fed427541032fe82'
           path: jeedom_core
       - uses: actions/checkout@v7
+        if: steps.deepl.outputs.configured == 'true'
         with:
           repository: jeedom/jeetranslate
           ref: 'f16119803e0c5b74d4867ee231ba0f983db3f502'
           path: jeetranslate-tool
       - uses: actions/setup-python@v7
+        if: steps.deepl.outputs.configured == 'true'
         with:
           python-version: '3.12'
           cache: pip
           cache-dependency-path: jeetranslate-tool/requirements.txt
       - name: Install pinned translator dependencies
+        if: steps.deepl.outputs.configured == 'true'
         run: python -m pip install -r jeetranslate-tool/requirements.txt
       - name: Generate translations without overwriting existing manual values
+        if: steps.deepl.outputs.configured == 'true'
         env:
           PYTHONPATH: ${{ github.workspace }}/jeetranslate-tool
           source_language: fr_FR
@@ -58,10 +62,13 @@ jobs:
           debug: 'false'
         run: python -m jeetranslate
       - name: Restore the plugin's declared language list
+        if: steps.deepl.outputs.configured == 'true'
         run: python plugin/.github/ci/restore_i18n_languages.py --root plugin --languages de_DE,en_US,es_ES,fr_FR,it_IT,pt_PT
       - name: Validate generated translations and placeholders
+        if: steps.deepl.outputs.configured == 'true'
         run: python plugin/.github/ci/validate_i18n.py --root plugin --expected de_DE,en_US,es_ES,fr_FR,it_IT,pt_PT --require-languages
       - name: Open or update the translation pull request
+        if: steps.deepl.outputs.configured == 'true'
         uses: peter-evans/create-pull-request@v8
         with:
           path: plugin

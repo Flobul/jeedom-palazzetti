@@ -18,3 +18,5 @@ jobs:
         run: python3 .github/ci/secret_scan.py
       - name: Dependency and optional component audits
         run: bash .github/ci/dependency_audit.sh
+      - name: Validate dependency update configuration
+        run: python3 .github/ci/test_dependabot_config.py
