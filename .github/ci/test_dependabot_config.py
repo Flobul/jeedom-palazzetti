@@ -16,8 +16,9 @@ class DependabotConfigTests(unittest.TestCase):
             flags=re.S,
         )
         self.assertTrue(entries)
-        expected = {("composer", "/.github/ci"), ("npm", "/.github/ci"), ("github-actions", "/")}
-        self.assertTrue(expected.issubset(set(entries)))
+        self.assertIn(("github-actions", "/"), entries)
+        self.assertNotIn(("composer", "/.github/ci"), entries)
+        self.assertNotIn(("npm", "/.github/ci"), entries)
         manifests = {"composer": "composer.json", "npm": "package.json"}
         for ecosystem, directory in entries:
             if ecosystem in manifests:
