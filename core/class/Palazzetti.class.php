@@ -2300,27 +2300,41 @@ class Palazzetti extends eqLogic
 
         $suffix = '';
         if (is_array($options)) {
-            // Jeedom injecte systématiquement des métadonnées d'execution
-            // (user_login, user_id, ...) dans les options. Elles ne sont pas
-            // des paramètres de commande et doivent être ignorées avant la
-            // validation afin de ne pas bloquer les actions simples comme
-            // CMD+ON / CMD+OFF.
+            // Jeedom ajoute ces métadonnées au tableau transmis à execute().
+            // Elles décrivent le contexte d'appel et non la valeur métier de
+            // la commande.
             $options = array_diff_key($options, array(
                 'user_login' => 0,
                 'user_id' => 0,
                 'username' => 0,
-                'title' => 0,
                 'callEvent' => 0,
                 'data' => 0,
                 'linkData' => 0,
+                'tags' => 0,
             ));
-            if (isset($options['jour'], $options['tranche'], $options['programme'])) {
+
+            // Les deux commandes de planning utilisent un payload interne au
+            // plugin, construit par desktop/modal/planning.php. Ce ne sont pas
+            // des options Jeedom génériques.
+            if ($base === 'SET+CDAY+') {
+                if (array_diff_key($options, array('jour' => 0, 'tranche' => 0, 'programme' => 0)) !== array()) {
+                    throw new Exception(__('options de planning non reconnues', __FILE__));
+                }
+                if (!isset($options['jour'], $options['tranche'], $options['programme'])) {
+                    throw new Exception(__('options de planning incomplètes', __FILE__));
+                }
                 $suffix = implode('+', array(
                     $this->validatedInteger($options['jour'], 1, 7, 'jour'),
                     $this->validatedInteger($options['tranche'], 1, 3, 'tranche'),
                     $this->validatedInteger($options['programme'], 0, 6, 'programme')
                 ));
-            } elseif (isset($options['numero'], $options['temperature'], $options['h1'], $options['m1'], $options['h2'], $options['m2'])) {
+            } elseif ($base === 'SET+CPRD+') {
+                if (array_diff_key($options, array('numero' => 0, 'temperature' => 0, 'h1' => 0, 'm1' => 0, 'h2' => 0, 'm2' => 0)) !== array()) {
+                    throw new Exception(__('options de tranche non reconnues', __FILE__));
+                }
+                if (!isset($options['numero'], $options['temperature'], $options['h1'], $options['m1'], $options['h2'], $options['m2'])) {
+                    throw new Exception(__('options de tranche incomplètes', __FILE__));
+                }
                 if (!is_numeric($options['temperature']) || (float) $options['temperature'] < 0 || (float) $options['temperature'] > 40) {
                     throw new Exception(__('température hors limites', __FILE__));
                 }
@@ -2332,7 +2346,13 @@ class Palazzetti extends eqLogic
                     $this->validatedInteger($options['h2'], 0, 23, 'h2'),
                     $this->validatedInteger($options['m2'], 0, 59, 'm2')
                 ));
-            } elseif (array_key_exists('slider', $options)) {
+            } elseif (in_array($base, array('SET+POWR+', 'SET+SETP+', 'SET+RFAN+', 'SET+FN3L+', 'SET+FN4L+'), true)) {
+                if (array_diff_key($options, array('slider' => 0)) !== array()) {
+                    throw new Exception(__('options de slider non reconnues', __FILE__));
+                }
+                if (!array_key_exists('slider', $options)) {
+                    throw new Exception(__('option slider manquante', __FILE__));
+                }
                 $minimum = is_numeric($cmd->getConfiguration('minValue')) ? (float) $cmd->getConfiguration('minValue') : 0;
                 $maximum = is_numeric($cmd->getConfiguration('maxValue')) ? (float) $cmd->getConfiguration('maxValue') : 255;
                 if (!is_numeric($options['slider'])
@@ -2341,17 +2361,25 @@ class Palazzetti extends eqLogic
                     throw new Exception(__('valeur hors limites', __FILE__));
                 }
                 $suffix = (string) (float) $options['slider'];
+            } elseif ($base === 'SET+LABL+') {
+                if (array_diff_key($options, array('message' => 0, 'title' => 0)) !== array()) {
+                    throw new Exception(__('options de message non reconnues', __FILE__));
+                }
+                if (!array_key_exists('message', $options)) {
+                    throw new Exception(__('option message manquante', __FILE__));
+                }
+                $suffix = self::sanitizeDiscoveryText((string) $options['message'], 40);
+                if (strpos($suffix, '+') !== false) {
+                    throw new Exception(__('libellé invalide', __FILE__));
+                }
             } elseif ($options !== array()) {
                 throw new Exception(__('options non reconnues', __FILE__));
             }
         } elseif ($options !== null && $options !== '') {
-            if (strpos($base, 'SET+LABL+') !== 0) {
-                throw new Exception(__('valeur texte non autorisée', __FILE__));
+            if ($base !== 'SET+CSST+' || !is_numeric($options)) {
+                throw new Exception(__('valeur scalaire non autorisée', __FILE__));
             }
-            $suffix = self::sanitizeDiscoveryText($options, 40);
-            if ($suffix === '' || strpos($suffix, '+') !== false) {
-                throw new Exception(__('libellé invalide', __FILE__));
-            }
+            $suffix = (string) (float) $options;
         }
 
         $command = self::normalizeCommand($base . $suffix);

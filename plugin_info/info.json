@@ -1,7 +1,7 @@
 {
 	"id": "Palazzetti",
 	"name": "Palazzetti",
-	"pluginVersion": "2.1.1",
+	"pluginVersion": "2.1.2",
 	"description": {
 		"fr_FR": "Le plugin Palazzetti permet de piloter les poêles à pellets de la marque Palazzetti au moyen de la passerelle Connection Box, mais aussi les modules PalaControl créés par DomoChip qui simulent une Connection Box. Les fonctionnalités proposées par le plugin sont identiques à celles de l'application mobile officielle Palazzetti App. Un widget simple de pilotage est mis à disposition sur le dashboard, il permet: * d'allumer / éteindre le poêle * de modifier la consigne * de motifier la force de la ventilation * de modifier l'intensité du foyer * de gérer les programmes horaires selon la philosophie du poêle * de visualiser toutes les informations du poêle et de la Connection Box",
 		"en_US": "The Palazzetti plugin allows you to control Palazzetti pellet stoves by means of the Connection Box gateway, but also the PalaControl modules created by DomoChip that simulate a Connection Box. The functionalities offered by the plugin are identical to those of the official Palazzetti App mobile application. A simple control widget is available on the dashboard, it allows: * turn on/off the stove * change the setpoint * motivate the strength of the ventilation * change the intensity of the fireplace * manage the time programs according to the philosophy of the stove * view all the information of the stove and the Connection Box",

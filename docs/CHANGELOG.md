@@ -2,6 +2,13 @@
 
 ## Non publié
 
+## Version 2.1.2 (27/10/2026)
+
+- Correction : les commandes lancées depuis un scénario ou une interaction utilisent les options Jeedom attendues (`slider`, `message`) et ignorent les métadonnées de contexte (`user_login`, `user_id`, `tags`, etc.).
+- La commande d'écriture du nom utilise désormais le sous-type Jeedom `message` ; les paramètres spécifiques au planning restent limités aux commandes internes de la fenêtre de planning.
+- Correction : les commandes action utilisent désormais strictement les conventions Jeedom (`slider`, `message`, métadonnées de contexte ignorées) et rejettent toute option métier inconnue.
+- Amélioration : la commande d'écriture du nom accepte un `message` vide et utilise le sous-type Jeedom `message` ; les paramètres spécifiques au planning restent limités aux commandes internes de la fenêtre de planning.
+
 ## Version 2.1.1 (20/10/2026)
 
 - Correction : les commandes d'action simples (Allumage, Extinction, etc.) étaient bloquées par un rejet d'options inconnues, car Jeedom injecte systématiquement des métadonnées d'exécution (`user_login`, `user_id`) dans les options transmises.

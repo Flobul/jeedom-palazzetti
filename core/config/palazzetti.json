@@ -124,7 +124,7 @@
         },
         "logicalId": "WName",
         "type": "action",
-        "subType": "other",
+        "subType": "message",
         "isHistorized": 0,
         "isVisible": 0
     },
