@@ -271,14 +271,34 @@
 	});
 
 function printEqLogic(_eqLogic) {
-	    var parameterButton = document.getElementById('buttonParam');
-	    var palaControl = document.getElementById('showWPalaControl');
-	    if (parameterButton) parameterButton.style.display = 'none';
-	    if ([true, 1, '1', 'true'].includes(_eqLogic.configuration.isWirelessPalaControl)) {
-	        if (parameterButton) parameterButton.style.display = '';
-	        if (palaControl) palaControl.style.display = '';
-	    }
-	}
+    var parameterButton = document.getElementById('buttonParam');
+    var palaControl = document.getElementById('showWPalaControl');
+    if (parameterButton) parameterButton.style.display = 'none';
+
+    var isWPala = [true, 1, '1', 'true'].includes(_eqLogic.configuration.isWirelessPalaControl);
+    if (!isWPala && Array.isArray(_eqLogic.cmd)) {
+        for (var i = 0; i < _eqLogic.cmd.length; i++) {
+            if (_eqLogic.cmd[i].logicalId === 'IName') {
+                jeedom.cmd.execute({
+                    id: _eqLogic.cmd[i].id,
+                    async: false,
+                    cache: 1,
+                    notify: false,
+                    success: function(result) {
+                        if (result && String(result).toLowerCase().indexOf('palacontrol') !== -1) {
+                            if (parameterButton) parameterButton.style.display = '';
+                            if (palaControl) palaControl.style.display = '';
+                        }
+                    }
+                });
+                break;
+            }
+        }
+    } else if (isWPala) {
+        if (parameterButton) parameterButton.style.display = '';
+        if (palaControl) palaControl.style.display = '';
+    }
+}
 
 	document.body.addEventListener('click', function(event) {
 	  var button = event.target.closest('.cmdAction[data-action="parametres"], .cmdAction[data-action="hiddenParametres"]');

@@ -30,7 +30,7 @@ if (!class_exists('eqLogic', false)) {
  */
 class Palazzetti extends eqLogic
 {
-    public static $_pluginVersion = '2.1.2';
+    public static $_pluginVersion = '2.1.3';
     private const REQUEST_ERROR_LOG_INTERVAL = 3600;
     private const REDISCOVERY_FAILURE_THRESHOLD = 3;
     private const REDISCOVERY_COOLDOWN = 3600;
@@ -1287,6 +1287,38 @@ class Palazzetti extends eqLogic
             }
             return $device;
         }
+
+        return self::detectTasmotaWPalaControl($device);
+    }
+
+    /**
+     * Identifie un équipement Tasmota faisant tourner le driver Palazzetti.
+     *
+     * @param array<string, mixed> $device Appareil découvert.
+     * @return array<string, mixed> Appareil enrichi.
+     */
+    private static function detectTasmotaWPalaControl($device)
+    {
+        if (empty($device['ip'])) {
+            return $device;
+        }
+
+        try {
+            $request = new com_http('http://' . $device['ip'] . '/cm?cmnd=Palazzetti');
+            $rawResponse = $request->exec(2, 1);
+        } catch (Exception $e) {
+            return $device;
+        }
+
+        $response = json_decode((string) $rawResponse, true);
+        if (!is_array($response) || !isset($response['Palazzetti']) || !is_array($response['Palazzetti'])) {
+            return $device;
+        }
+
+        $device['gatewayType'] = 'Tasmota WPalaControl';
+        $device['isWirelessPalaControl'] = true;
+        $device['model'] = isset($device['model']) && $device['model'] !== '' ? $device['model'] : 'Tasmota WPalaControl';
+        $device['versions'] = isset($device['versions']) && $device['versions'] !== '' ? $device['versions'] : 'Tasmota';
 
         return $device;
     }
