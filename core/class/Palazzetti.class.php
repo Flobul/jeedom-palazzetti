@@ -30,7 +30,7 @@ if (!class_exists('eqLogic', false)) {
  */
 class Palazzetti extends eqLogic
 {
-    public static $_pluginVersion = '2.1.1';
+    public static $_pluginVersion = '2.1.2';
     private const REQUEST_ERROR_LOG_INTERVAL = 3600;
     private const REDISCOVERY_FAILURE_THRESHOLD = 3;
     private const REDISCOVERY_COOLDOWN = 3600;
