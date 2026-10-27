@@ -2,6 +2,14 @@
 
 ## Non publié
 
+## Version 2.1.3 (27/10/2026)
+
+- Détection des équipements Tasmota WPalaControl via la commande HTTP `Palazzetti` du driver Tasmota.
+- Les boutons **Paramètres du poêle** et **Paramètres cachés du poêle** s'affichent maintenant pour les équipements Tasmota-WPalaControl.
+- Correction de `buildCommandString()` : les commandes action utilisent strictement les conventions Jeedom (`slider`, `message`) et ignorent les métadonnées de contexte (`user_login`, `user_id`, `tags`, etc.) ; toute option métier inconnue est rejetée.
+- `SET+LABL+` accepte un `message` vide et utilise le sous-type Jeedom `message` ; les paramètres spécifiques au planning restent limités aux commandes internes de la fenêtre de planning.
+- Le fallback de détection WPalaControl accepte toute réponse contenant `palacontrol` (ex: `TasmoPalaControl`), pas seulement `WPalaControl`.
+
 ## Version 2.1.2 (27/10/2026)
 
 - Correction : les commandes lancées depuis un scénario ou une interaction utilisent les options Jeedom attendues (`slider`, `message`) et ignorent les métadonnées de contexte (`user_login`, `user_id`, `tags`, etc.).
