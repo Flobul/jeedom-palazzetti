@@ -22,6 +22,12 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("RELEASE_AUTOMATION_ENABLED: ${{ vars.RELEASE_AUTOMATION_ENABLED", text)
         self.assertIn('[ "$RELEASE_AUTOMATION_ENABLED" = "true" ]', text)
         self.assertIn("Candidate is not the current default-branch commit", text)
+        publish = text[text.index("  publish:"):text.index("  notify-central:")]
+        revalidation = publish.index("Candidate became stale before publication")
+        tag_creation = publish.index("      - name: Create tag only when absent")
+        release_creation = publish.index("      - name: Revalidate immutable tag and create Release")
+        self.assertLess(revalidation, tag_creation)
+        self.assertLess(revalidation, release_creation)
         self.assertIn("conclusion == 'success'", text)
         self.assertIn('actions/runs?per_page=100', text)
         self.assertIn('.path == ".github/workflows/ci.yml"', text)
