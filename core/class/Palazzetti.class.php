@@ -30,6 +30,76 @@ if (!class_exists('eqLogic', false)) {
  */
 class Palazzetti extends eqLogic
 {
+    /**
+     * Retourne une synthèse strictement agrégée pour le sujet Community.
+     *
+     * Aucune adresse, identité d'équipement, valeur de commande ou donnée de
+     * chauffe n'est incluse. La méthode lit uniquement la configuration et le
+     * cache déjà présents dans Jeedom et n'effectue aucun appel réseau.
+     *
+     * @param string $_separator Séparateur attendu par le core Jeedom.
+     * @return string Diagnostic borné destiné à plugin::createCommunityPost().
+     */
+    public static function getConfigForCommunity($_separator = '<br>')
+    {
+        $equipments = eqLogic::byType(__CLASS__);
+        $enabled = 0;
+        $commands = 0;
+        $wirelessGateways = 0;
+        $standardGateways = 0;
+        $communicationOk = 0;
+        $communicationIssue = 0;
+        $communicationUnknown = 0;
+
+        foreach ($equipments as $equipment) {
+            if ((int) $equipment->getIsEnable() === 1) {
+                $enabled++;
+            }
+            $equipmentCommands = $equipment->getCmd();
+            $commands += is_array($equipmentCommands) ? count($equipmentCommands) : 0;
+
+            if ((int) $equipment->getConfiguration('isWirelessPalaControl', 0) === 1) {
+                $wirelessGateways++;
+            } else {
+                $standardGateways++;
+            }
+
+            $communication = $equipment->getCommunicationHealth();
+            if (!empty($communication['offline']) || !empty($communication['stoveOffline'])) {
+                $communicationIssue++;
+            } elseif (!empty($communication['lastSuccess'])) {
+                $communicationOk++;
+            } else {
+                $communicationUnknown++;
+            }
+        }
+
+        $refreshSchedule = trim((string) config::byKey('autorefresh', __CLASS__, ''));
+        $discoverySchedule = trim((string) config::byKey('auto_discovery_interval', __CLASS__, ''));
+        $parameterWrites = (int) config::byKey('allow_parameter_writes', __CLASS__, 0) === 1;
+
+        $lines = array(
+            '<!-- JEEDOM_PLUGIN_DIAGNOSTICS_START -->',
+            __('Poêles configurés', __FILE__) . ' : ' . count($equipments),
+            __('Poêles actifs', __FILE__) . ' : ' . $enabled,
+            __('Commandes configurées', __FILE__) . ' : ' . $commands,
+            __('Passerelles Wireless PalaControl', __FILE__) . ' : ' . $wirelessGateways,
+            __('Passerelles standard', __FILE__) . ' : ' . $standardGateways,
+            __('Communication', __FILE__) . ' : ' . sprintf(
+                __('OK %d / À vérifier %d / Non disponible %d', __FILE__),
+                $communicationOk,
+                $communicationIssue,
+                $communicationUnknown
+            ),
+            __('Rafraîchissement configuré', __FILE__) . ' : ' . ($refreshSchedule === '' ? __('Non disponible', __FILE__) : __('Oui', __FILE__)),
+            __('Découverte automatique', __FILE__) . ' : ' . ($discoverySchedule === '' ? __('Désactivée', __FILE__) : __('Activée', __FILE__)),
+            __('Écriture des paramètres avancés', __FILE__) . ' : ' . ($parameterWrites ? __('Activée', __FILE__) : __('Désactivée', __FILE__)),
+            '<!-- JEEDOM_PLUGIN_DIAGNOSTICS_END -->'
+        );
+
+        return implode($_separator, $lines) . $_separator;
+    }
+
     public static $_pluginVersion = '2.1.3';
     private const REQUEST_ERROR_LOG_INTERVAL = 3600;
     private const REDISCOVERY_FAILURE_THRESHOLD = 3;

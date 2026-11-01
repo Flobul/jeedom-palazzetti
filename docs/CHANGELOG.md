@@ -2,6 +2,8 @@
 
 ## Non publié
 
+
+- Ajout d’un accès natif à Community Jeedom avec diagnostic agrégé et anonymisé.
 ## Version 2.1.3 (27/10/2026)
 
 - Détection des équipements Tasmota WPalaControl via la commande HTTP `Palazzetti` du driver Tasmota.

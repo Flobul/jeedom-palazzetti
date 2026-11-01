@@ -75,7 +75,7 @@ $palazzettiCommandValue = function ($eqLogic, $logicalId) {
 				<div class="col-sm-2">
 					<legend><i class=" fas fa-comments"></i> {{Community}}</legend>
 					<div class="eqLogicThumbnailContainer">
-						<div class="cursor eqLogicAction logoSecondary" data-action="createCommunityPost">
+						<div class="cursor eqLogicAction logoSecondary" data-action="createCommunityPost" data-plugin_id="Palazzetti" role="button" tabindex="0" aria-label="{{Créer un sujet d'assistance sur Community Jeedom}}">
 							<i class="fas fa-ambulance"></i>
 							<br>
 							<span style="color:var(--txt-color)">{{Créer un post Community}}</span>
@@ -292,5 +292,6 @@ $palazzettiCommandValue = function ($eqLogic, $logicalId) {
 	</div>
 </div>
 
+<?php include_file('desktop', 'community', 'js', 'Palazzetti'); ?>
 <?php include_file('desktop', 'Palazzetti', 'js', 'Palazzetti'); ?>
 <?php include_file('core', 'plugin.template', 'js'); ?>
