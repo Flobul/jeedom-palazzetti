@@ -45,8 +45,8 @@ class ReadmeBadgesTests(unittest.TestCase):
         self.assertIn("secrets.GITHUB_TOKEN", workflow)
         self.assertIn("[skip ci]", workflow)
         self.assertLess(
-            workflow.index("run: python3 .github/ci/test_readme_badges.py"),
-            workflow.index("run: python3 .github/ci/readme_badges.py"),
+            workflow.index("python3 .github/ci/test_readme_badges.py"),
+            workflow.index("python3 .github/ci/readme_badges.py"),
         )
 
     def test_all_five_private_badge_routes_are_rewritten(self):

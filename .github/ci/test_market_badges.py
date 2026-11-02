@@ -29,16 +29,16 @@ class MarketBadgesTests(unittest.TestCase):
         self.assertEqual(int(match.group(1)), config.get("market", {}).get("id"))
 
     def test_workflow_uses_versioned_actions_and_tests_before_write(self):
-        workflow = MODULE_PATH.parents[1].joinpath("workflows", "market-badges.yml").read_text(encoding="utf-8")
+        workflow = MODULE_PATH.parents[1].joinpath("workflows", "readme-badges.yml").read_text(encoding="utf-8")
         self.assertNotIn("workflow_call:", workflow)
         self.assertIn("timeout-minutes:", workflow)
         self.assertIn("push:", workflow)
         self.assertIn("github.event.repository.default_branch", workflow)
-        self.assertIn("cron: '17 4 * * 1'", workflow)
+        self.assertIn("cron: '23 4 * * 1'", workflow)
         self.assertIn("actions/checkout@v7", workflow)
         self.assertIn("actions/setup-python@v7", workflow)
         self.assertNotRegex(workflow, r"actions/(?:checkout|setup-python)@[0-9a-f]{40}")
-        self.assertLess(workflow.index("run: python3 .github/ci/test_market_badges.py"), workflow.index("run: python3 .github/ci/market_badges.py"))
+        self.assertLess(workflow.index("python3 .github/ci/test_market_badges.py"), workflow.index("python3 .github/ci/market_badges.py"))
         self.assertIn("[skip ci]", workflow)
 
     def test_override_is_validated_against_logical_id(self):
