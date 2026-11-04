@@ -2,8 +2,11 @@
 
 ## Non publié
 
+## Version 2.1.4 (04/11/2026)
 
-- Ajout d’un accès natif à Community Jeedom avec diagnostic agrégé et anonymisé.
+- Les commandes exécutées depuis un scénario ne rejettent plus les métadonnées inconnues ajoutées par Jeedom : chaque action traite uniquement ses paramètres attendus (`slider`, `message` ou paramètres internes de planning) et continue de valider strictement leur valeur.
+- Les commandes de bascule du planning n'acceptent plus qu'une valeur scalaire `0` ou `1`, et refusent les tableaux sans valeur scalaire.
+
 ## Version 2.1.3 (27/10/2026)
 
 - Détection des équipements Tasmota WPalaControl via la commande HTTP `Palazzetti` du driver Tasmota.

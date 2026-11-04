@@ -30,6 +30,34 @@ if (!class_exists('eqLogic', false)) {
  */
 class Palazzetti extends eqLogic
 {
+
+    public static $_pluginVersion = '2.1.3';
+    private const REQUEST_ERROR_LOG_INTERVAL = 3600;
+    private const REDISCOVERY_FAILURE_THRESHOLD = 3;
+    private const REDISCOVERY_COOLDOWN = 3600;
+    private const DISCOVERY_PORT = 54549;
+    private const DISCOVERY_TIMEOUT = 3;
+    private const DISCOVERY_MESSAGE = 'plzbridge?';
+    private const DISCOVERY_MAX_UNICAST_HOSTS = 1024;
+    private const DISCOVERY_MAX_TARGETS = 4096;
+    private const PROTOCOL_MAX_COMMAND_LENGTH = 256;
+    private const DISCOVERY_MAX_TEXT_LENGTH = 120;
+    private const HISTORY_MAX_DAYS = 31;
+    private const HISTORY_MAX_POINTS_PER_SERIES = 3000;
+    private const HISTORY_ACTIVE_STATES = array(2, 3, 4, 5, 6, 9, 10, 11, 12);
+    private const HISTORY_SERIES = array(
+        'status' => array('logicalId' => 'IStatus', 'step' => true),
+        'power' => array('logicalId' => 'IPower', 'step' => true),
+        'fan' => array('logicalId' => 'IFan', 'step' => true),
+        'temperature' => array('logicalId' => 'ITemp', 'step' => false),
+        'setpoint' => array('logicalId' => 'IConsigne', 'step' => true),
+        'temperature2' => array('logicalId' => 'ITemp2', 'step' => false),
+        'temperature3' => array('logicalId' => 'ITemp3', 'step' => false),
+        'pellets' => array('logicalId' => 'IQuantite', 'step' => true),
+        'heatingTime' => array('logicalId' => 'IHeuresChauffe', 'step' => true)
+    );
+    private static $rediscoveryRunning = false;
+
     /**
      * Retourne une synthèse strictement agrégée pour le sujet Community.
      *
@@ -99,33 +127,6 @@ class Palazzetti extends eqLogic
 
         return implode($_separator, $lines) . $_separator;
     }
-
-    public static $_pluginVersion = '2.1.3';
-    private const REQUEST_ERROR_LOG_INTERVAL = 3600;
-    private const REDISCOVERY_FAILURE_THRESHOLD = 3;
-    private const REDISCOVERY_COOLDOWN = 3600;
-    private const DISCOVERY_PORT = 54549;
-    private const DISCOVERY_TIMEOUT = 3;
-    private const DISCOVERY_MESSAGE = 'plzbridge?';
-    private const DISCOVERY_MAX_UNICAST_HOSTS = 1024;
-    private const DISCOVERY_MAX_TARGETS = 4096;
-    private const PROTOCOL_MAX_COMMAND_LENGTH = 256;
-    private const DISCOVERY_MAX_TEXT_LENGTH = 120;
-    private const HISTORY_MAX_DAYS = 31;
-    private const HISTORY_MAX_POINTS_PER_SERIES = 3000;
-    private const HISTORY_ACTIVE_STATES = array(2, 3, 4, 5, 6, 9, 10, 11, 12);
-    private const HISTORY_SERIES = array(
-        'status' => array('logicalId' => 'IStatus', 'step' => true),
-        'power' => array('logicalId' => 'IPower', 'step' => true),
-        'fan' => array('logicalId' => 'IFan', 'step' => true),
-        'temperature' => array('logicalId' => 'ITemp', 'step' => false),
-        'setpoint' => array('logicalId' => 'IConsigne', 'step' => true),
-        'temperature2' => array('logicalId' => 'ITemp2', 'step' => false),
-        'temperature3' => array('logicalId' => 'ITemp3', 'step' => false),
-        'pellets' => array('logicalId' => 'IQuantite', 'step' => true),
-        'heatingTime' => array('logicalId' => 'IHeuresChauffe', 'step' => true)
-    );
-    private static $rediscoveryRunning = false;
 
     /**
      * Normalise et valide une commande destinée à la passerelle.
@@ -2386,12 +2387,15 @@ class Palazzetti extends eqLogic
     }
 
     /**
-     * Construit une commande d'action à partir d'options strictement validées.
+     * Construit une commande d'action à partir des seules options qu'elle utilise.
+     *
+     * Les autres clés transmises par Jeedom sont ignorées : seules les valeurs
+     * effectivement incorporées dans la commande Palazzetti sont validées.
      *
      * @param PalazzettiCmd $cmd Commande Jeedom.
      * @param mixed $options Options d'exécution.
      * @return string Commande Palazzetti validée.
-     * @throws Exception Si les options sont invalides.
+     * @throws Exception Si une option attendue est absente ou invalide.
      */
     private function buildCommandString($cmd, $options)
     {
@@ -2402,86 +2406,79 @@ class Palazzetti extends eqLogic
 
         $suffix = '';
         if (is_array($options)) {
-            // Jeedom ajoute ces métadonnées au tableau transmis à execute().
-            // Elles décrivent le contexte d'appel et non la valeur métier de
-            // la commande.
-            $options = array_diff_key($options, array(
-                'user_login' => 0,
-                'user_id' => 0,
-                'username' => 0,
-                'callEvent' => 0,
-                'data' => 0,
-                'linkData' => 0,
-                'tags' => 0,
-            ));
+            switch ($base) {
+                case 'SET+CDAY+':
+                    if (!isset($options['jour'], $options['tranche'], $options['programme'])) {
+                        throw new Exception(__('options de planning incomplètes', __FILE__));
+                    }
+                    $suffix = implode('+', array(
+                        $this->validatedInteger($options['jour'], 1, 7, 'jour'),
+                        $this->validatedInteger($options['tranche'], 1, 3, 'tranche'),
+                        $this->validatedInteger($options['programme'], 0, 6, 'programme')
+                    ));
+                    break;
 
-            // Les deux commandes de planning utilisent un payload interne au
-            // plugin, construit par desktop/modal/planning.php. Ce ne sont pas
-            // des options Jeedom génériques.
-            if ($base === 'SET+CDAY+') {
-                if (array_diff_key($options, array('jour' => 0, 'tranche' => 0, 'programme' => 0)) !== array()) {
-                    throw new Exception(__('options de planning non reconnues', __FILE__));
-                }
-                if (!isset($options['jour'], $options['tranche'], $options['programme'])) {
-                    throw new Exception(__('options de planning incomplètes', __FILE__));
-                }
-                $suffix = implode('+', array(
-                    $this->validatedInteger($options['jour'], 1, 7, 'jour'),
-                    $this->validatedInteger($options['tranche'], 1, 3, 'tranche'),
-                    $this->validatedInteger($options['programme'], 0, 6, 'programme')
-                ));
-            } elseif ($base === 'SET+CPRD+') {
-                if (array_diff_key($options, array('numero' => 0, 'temperature' => 0, 'h1' => 0, 'm1' => 0, 'h2' => 0, 'm2' => 0)) !== array()) {
-                    throw new Exception(__('options de tranche non reconnues', __FILE__));
-                }
-                if (!isset($options['numero'], $options['temperature'], $options['h1'], $options['m1'], $options['h2'], $options['m2'])) {
-                    throw new Exception(__('options de tranche incomplètes', __FILE__));
-                }
-                if (!is_numeric($options['temperature']) || (float) $options['temperature'] < 0 || (float) $options['temperature'] > 40) {
-                    throw new Exception(__('température hors limites', __FILE__));
-                }
-                $suffix = implode('+', array(
-                    $this->validatedInteger($options['numero'], 1, 6, 'numero'),
-                    (string) (float) $options['temperature'],
-                    $this->validatedInteger($options['h1'], 0, 23, 'h1'),
-                    $this->validatedInteger($options['m1'], 0, 59, 'm1'),
-                    $this->validatedInteger($options['h2'], 0, 23, 'h2'),
-                    $this->validatedInteger($options['m2'], 0, 59, 'm2')
-                ));
-            } elseif (in_array($base, array('SET+POWR+', 'SET+SETP+', 'SET+RFAN+', 'SET+FN3L+', 'SET+FN4L+'), true)) {
-                if (array_diff_key($options, array('slider' => 0)) !== array()) {
-                    throw new Exception(__('options de slider non reconnues', __FILE__));
-                }
-                if (!array_key_exists('slider', $options)) {
-                    throw new Exception(__('option slider manquante', __FILE__));
-                }
-                $minimum = is_numeric($cmd->getConfiguration('minValue')) ? (float) $cmd->getConfiguration('minValue') : 0;
-                $maximum = is_numeric($cmd->getConfiguration('maxValue')) ? (float) $cmd->getConfiguration('maxValue') : 255;
-                if (!is_numeric($options['slider'])
-                    || (float) $options['slider'] < $minimum
-                    || (float) $options['slider'] > $maximum) {
-                    throw new Exception(__('valeur hors limites', __FILE__));
-                }
-                $suffix = (string) (float) $options['slider'];
-            } elseif ($base === 'SET+LABL+') {
-                if (array_diff_key($options, array('message' => 0, 'title' => 0)) !== array()) {
-                    throw new Exception(__('options de message non reconnues', __FILE__));
-                }
-                if (!array_key_exists('message', $options)) {
-                    throw new Exception(__('option message manquante', __FILE__));
-                }
-                $suffix = self::sanitizeDiscoveryText((string) $options['message'], 40);
-                if (strpos($suffix, '+') !== false) {
-                    throw new Exception(__('libellé invalide', __FILE__));
-                }
-            } elseif ($options !== array()) {
-                throw new Exception(__('options non reconnues', __FILE__));
+                case 'SET+CPRD+':
+                    if (!isset($options['numero'], $options['temperature'], $options['h1'], $options['m1'], $options['h2'], $options['m2'])) {
+                        throw new Exception(__('options de tranche incomplètes', __FILE__));
+                    }
+                    if (!is_numeric($options['temperature']) || (float) $options['temperature'] < 0 || (float) $options['temperature'] > 40) {
+                        throw new Exception(__('température hors limites', __FILE__));
+                    }
+                    $suffix = implode('+', array(
+                        $this->validatedInteger($options['numero'], 1, 6, 'numero'),
+                        (string) (float) $options['temperature'],
+                        $this->validatedInteger($options['h1'], 0, 23, 'h1'),
+                        $this->validatedInteger($options['m1'], 0, 59, 'm1'),
+                        $this->validatedInteger($options['h2'], 0, 23, 'h2'),
+                        $this->validatedInteger($options['m2'], 0, 59, 'm2')
+                    ));
+                    break;
+
+                case 'SET+POWR+':
+                case 'SET+SETP+':
+                case 'SET+RFAN+':
+                case 'SET+FN3L+':
+                case 'SET+FN4L+':
+                    if (!array_key_exists('slider', $options)) {
+                        throw new Exception(__('option slider manquante', __FILE__));
+                    }
+                    $minimum = is_numeric($cmd->getConfiguration('minValue')) ? (float) $cmd->getConfiguration('minValue') : 0;
+                    $maximum = is_numeric($cmd->getConfiguration('maxValue')) ? (float) $cmd->getConfiguration('maxValue') : 255;
+                    if (!is_numeric($options['slider'])
+                        || (float) $options['slider'] < $minimum
+                        || (float) $options['slider'] > $maximum) {
+                        throw new Exception(__('valeur hors limites', __FILE__));
+                    }
+                    $suffix = (string) (float) $options['slider'];
+                    break;
+
+                case 'SET+LABL+':
+                    if (!array_key_exists('message', $options)) {
+                        throw new Exception(__('option message manquante', __FILE__));
+                    }
+                    $suffix = self::sanitizeDiscoveryText((string) $options['message'], 40);
+                    if (strpos($suffix, '+') !== false) {
+                        throw new Exception(__('libellé invalide', __FILE__));
+                    }
+                    break;
+
+                case 'SET+CSST+':
+                    throw new Exception(__('valeur scalaire non autorisée', __FILE__));
+
+                default:
+                    // Cette action ne consomme aucune valeur du tableau.
+                    break;
             }
         } elseif ($options !== null && $options !== '') {
-            if ($base !== 'SET+CSST+' || !is_numeric($options)) {
-                throw new Exception(__('valeur scalaire non autorisée', __FILE__));
+            switch ($base) {
+                case 'SET+CSST+':
+                    $suffix = (string) $this->validatedInteger($options, 0, 1, 'valeur');
+                    break;
+
+                default:
+                    throw new Exception(__('valeur scalaire non autorisée', __FILE__));
             }
-            $suffix = (string) (float) $options;
         }
 
         $command = self::normalizeCommand($base . $suffix);
